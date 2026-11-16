@@ -1,0 +1,203 @@
+.sd-feedback-page {
+  max-width: 760px;
+}
+
+.sd-feedback-card {
+  padding: 32px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background:
+    radial-gradient(ellipse at top right, #eef4ff 0, transparent 38%),
+    #fff;
+  box-shadow: 0 12px 32px rgb(17 24 39 / 6%);
+}
+
+.sd-feedback-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 30px;
+}
+
+.sd-feedback-icon {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  place-items: center;
+  border: 1px solid var(--blue-line);
+  border-radius: 13px;
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.sd-feedback-heading h1 {
+  margin: 0 0 7px;
+  font-size: clamp(24px, 4vw, 30px);
+  font-weight: 700;
+  letter-spacing: -.03em;
+  line-height: 1.2;
+}
+
+.sd-feedback-heading p,
+.sd-feedback-note {
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.65;
+}
+
+.sd-feedback-message {
+  margin: -10px 0 20px;
+  padding: 11px 13px;
+  border: 1px solid #bbebc9;
+  border-radius: 8px;
+  background: #f0fbf3;
+  color: var(--green);
+  font-size: 12px;
+}
+
+.sd-feedback-message.is-error {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.sd-feedback-form {
+  display: grid;
+  gap: 21px;
+}
+
+.sd-feedback-rating {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 22px 16px 18px;
+  border: 1px solid #e8edf5;
+  border-radius: 12px;
+  background: #f9fbff;
+}
+
+.sd-feedback-rating legend {
+  padding: 0 8px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.sd-feedback-stars {
+  display: flex;
+  justify-content: center;
+  gap: 9px;
+}
+
+.sd-feedback-star {
+  position: relative;
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 10px;
+  color: #cbd2de;
+  cursor: pointer;
+  transition: color 140ms ease, background 140ms ease, transform 140ms ease;
+}
+
+.sd-feedback-star:hover {
+  transform: translateY(-2px);
+}
+
+.sd-feedback-star:has(input:checked),
+.sd-feedback-star:has(input:focus-visible) {
+  background: #fff3d6;
+}
+
+.sd-feedback-star input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.sd-feedback-star input:focus-visible + svg {
+  outline: 2px solid var(--blue);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+.sd-feedback-star svg.is-filled,
+.sd-feedback-star:has(input:checked) svg {
+  fill: #f5b52e;
+  color: #e39b0b;
+}
+
+.sd-feedback-rating-copy {
+  min-height: 18px;
+  color: #536174;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.sd-feedback-field {
+  display: grid;
+  gap: 7px;
+  color: #374151;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.sd-feedback-field em {
+  color: var(--muted);
+  font-style: normal;
+  font-weight: 400;
+}
+
+.sd-feedback-field-error {
+  color: #b91c1c;
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.sd-feedback-field textarea.sd-input {
+  min-height: 100px;
+  padding: 10px 12px;
+  resize: vertical;
+}
+
+.sd-feedback-form > .sd-btn {
+  justify-self: start;
+  min-height: 40px;
+}
+
+.sd-feedback-note {
+  margin-top: 21px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+}
+
+@media (max-width: 540px) {
+  .sd-feedback-card {
+    padding: 23px 18px;
+  }
+
+  .sd-feedback-heading {
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .sd-feedback-stars {
+    gap: 3px;
+  }
+
+  .sd-feedback-star {
+    width: 43px;
+    height: 43px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sd-feedback-star {
+    transition: none;
+  }
+}
