@@ -130,7 +130,6 @@ function FSMAnimatedBackground() {
           </span>
         ))}
       </div>
-
     </div>
   );
 }
@@ -172,7 +171,7 @@ function AboutSnakeAnimation() {
         d={sideRoute}
       />
       {topIcons.map((Icon, index) => (
-        <g className="ff-about-snake__marker" key={`top-${Icon.name}`}>
+        <g className="ff-about-snake__marker" key={`top-${index}`}>
           <circle r="18" />
           <foreignObject x="-11" y="-11" width="22" height="22">
             <span
@@ -193,7 +192,7 @@ function AboutSnakeAnimation() {
       {sideIcons.map((Icon, index) => (
         <g
           className="ff-about-snake__marker ff-about-snake__marker--side"
-          key={`side-${Icon.name}`}
+          key={`side-${index}`}
         >
           <circle r="18" />
           <foreignObject x="-11" y="-11" width="22" height="22">
@@ -336,8 +335,14 @@ const products = [
   "Analytics & Reports",
 ];
 
+const CONTACT_FORM_API_URL =
+  "https://techtamminaapps.appiancloud.com/suite/webapi/contactForm";
+const APPIAN_API_KEY = process.env.REACT_APP_APPIAN_API_KEY;
+
 function ContactSection() {
   const [sent, setSent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -360,18 +365,52 @@ function ContactSection() {
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    // TODO: send `form` to your API, e.g. await fetch("/api/contact", { method: "POST", body: JSON.stringify(form) })
-    setSent(true);
-    setForm({
-      name: "",
-      email: "",
-      phone: "",
-      org: "",
-      type: "",
-      message: "",
-      consent: false,
-      products: [],
-    });
+    setSubmitting(true);
+    setSubmitError("");
+
+    try {
+      if (!APPIAN_API_KEY?.trim()) {
+        throw new Error(
+          "Contact form is not configured. Add REACT_APP_APPIAN_API_KEY to .env and restart the app.",
+        );
+      }
+
+      const response = await fetch(CONTACT_FORM_API_URL, {
+        method: "POST",
+        headers: {
+          "Appian-API-Key": APPIAN_API_KEY.trim(),
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(form),
+      });
+
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          throw new Error("The contact form API key was rejected. Check your .env configuration.");
+        }
+        throw new Error(`Contact form submission failed (${response.status}).`);
+      }
+
+      setSent(true);
+      setForm({
+        name: "",
+        email: "",
+        phone: "",
+        org: "",
+        type: "",
+        message: "",
+        consent: false,
+        products: [],
+      });
+    } catch (error) {
+      setSent(false);
+      setSubmitError(
+        error.message || "We could not send your message. Please try again.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -464,12 +503,19 @@ function ContactSection() {
             </div>
           )}
 
+          {submitError && (
+            <div className="ff-cf-error" role="alert">
+              {submitError}
+            </div>
+          )}
+
           <div className="ff-cf-row">
             <div>
-              <label>
+              <label htmlFor="contact-name">
                 Full Name <em>*</em>
               </label>
               <input
+                id="contact-name"
                 required
                 value={form.name}
                 onChange={set("name")}
@@ -477,10 +523,11 @@ function ContactSection() {
               />
             </div>
             <div>
-              <label>
+              <label htmlFor="contact-email">
                 Email Address <em>*</em>
               </label>
               <input
+                id="contact-email"
                 required
                 type="email"
                 value={form.email}
@@ -491,8 +538,9 @@ function ContactSection() {
           </div>
           <div className="ff-cf-row">
             <div>
-              <label>Phone Number</label>
+              <label htmlFor="contact-phone">Phone Number</label>
               <input
+                id="contact-phone"
                 type="tel"
                 value={form.phone}
                 onChange={set("phone")}
@@ -500,8 +548,9 @@ function ContactSection() {
               />
             </div>
             <div>
-              <label>Organization</label>
+              <label htmlFor="contact-organization">Organization</label>
               <input
+                id="contact-organization"
                 value={form.org}
                 onChange={set("org")}
                 placeholder="Your company / organization"
@@ -509,17 +558,22 @@ function ContactSection() {
             </div>
           </div>
 
-          <label>
+          <label htmlFor="contact-enquiry-type">
             Enquiry Type <em>*</em>
           </label>
-          <select required value={form.type} onChange={set("type")}>
+          <select
+            id="contact-enquiry-type"
+            required
+            value={form.type}
+            onChange={set("type")}
+          >
             <option value="">Select enquiry type</option>
             {enquiryTypes.map((t) => (
               <option key={t}>{t}</option>
             ))}
           </select>
 
-          <label>Product of Interest</label>
+          <span className="ff-cf-label">Product of Interest</span>
           <div className="ff-cf-checks">
             {products.map((p) => (
               <label key={p}>
@@ -533,10 +587,11 @@ function ContactSection() {
             ))}
           </div>
 
-          <label>
+          <label htmlFor="contact-message">
             Message <em>*</em>
           </label>
           <textarea
+            id="contact-message"
             required
             rows={4}
             value={form.message}
@@ -557,8 +612,12 @@ function ContactSection() {
             </span>
           </label>
 
-          <button type="submit" className="ff-button ff-solid ff-cf-submit">
-            Send Message — Let’s Connect <ArrowRight size={16} />
+          <button
+            type="submit"
+            className="ff-button ff-solid ff-cf-submit"
+            disabled={submitting}
+          >
+            {submitting ? "Sending..." : "Send Message — Let’s Connect"}
           </button>
         </form>
       </div>
@@ -566,11 +625,21 @@ function ContactSection() {
   );
 }
 
-export default function LandingPage() {
+export default function LandingPage({ onLogin }) {
   const pageRef = useRef(null);
   const flowRef = useRef(null);
   const featureRef = useRef(null);
   const roleRef = useRef(null);
+
+  const handleLogin = (event) => {
+    event.preventDefault();
+    onLogin();
+  };
+
+  useEffect(() => {
+    document.body.classList.add("ff-landing-active");
+    return () => document.body.classList.remove("ff-landing-active");
+  }, []);
 
   useEffect(() => {
     const root = pageRef.current;
@@ -581,11 +650,16 @@ export default function LandingPage() {
 
     const reveal = (el, isVisible = true) =>
       el.classList.toggle("ff-reveal-in", isVisible);
-    const reducedMotion = window.matchMedia(
+    const reducedMotion = window.matchMedia?.(
       "(prefers-reduced-motion: reduce)",
-    ).matches;
+    )?.matches ?? false;
 
     if (reducedMotion) {
+      nodes.forEach(reveal);
+      return undefined;
+    }
+
+    if (!("IntersectionObserver" in window)) {
       nodes.forEach(reveal);
       return undefined;
     }
@@ -640,7 +714,7 @@ export default function LandingPage() {
               <a href="#contact">Contact</a>
             </div>
             <div className="ff-actions">
-              <a className="ff-button ff-outline" href="#login">
+              <a className="ff-button ff-outline" href="#login" onClick={handleLogin}>
                 Login
               </a>
               <a className="ff-button ff-solid" href="#contact">
@@ -676,7 +750,7 @@ export default function LandingPage() {
                 <a className="ff-button ff-outline" href="#features">
                   Explore features
                 </a>
-                <a className="ff-button ff-solid" href="#login">
+                <a className="ff-button ff-solid" href="#login" onClick={handleLogin}>
                   Get started <ArrowRight size={16} />
                 </a>
               </div>
@@ -798,11 +872,14 @@ export default function LandingPage() {
           <div className="ff-container">
             <div className="ff-heading" data-reveal>
               <span className="ff-eyebrow">Features</span>
-              <h2>Powerful features. Seamless operations.</h2>
-              <p>
-                The core tools every service organization needs, working
-                together.
-              </p>
+              <h2 className="ff-single-line-title">
+                Powerful features &amp; Seamless features
+              </h2>
+              <center>
+                <p>
+                  The core tools every service organization needs, working  together.
+                </p>
+              </center>
             </div>
             {/* CHANGED: added ref={featureRef} */}
             <div className="ff-feature-grid" ref={featureRef}>
@@ -833,11 +910,13 @@ export default function LandingPage() {
           <div className="ff-container">
             <div className="ff-heading" data-reveal>
               <span className="ff-eyebrow">How it works</span>
-              <h2>From service request to successful resolution</h2>
-              <p>
+              <h2 className="ff-single-line-title">
+                From service request to successful resolution
+              </h2>
+              {/* <p>
                 Follow each job as it moves through one connected service
                 workflow.
-              </p>
+              </p> */}
             </div>
             <div className="ff-workflow ff-circular-process">
               <div className="ff-workflow-bar">
@@ -881,8 +960,10 @@ export default function LandingPage() {
           <div className="ff-container">
             <div className="ff-heading" data-reveal>
               <span className="ff-eyebrow">Solutions</span>
-              <h2>Designed for every role in field service</h2>
-              <p>Each person gets tools that match their responsibilities.</p>
+              <h2 className="ff-single-line-title ff-solutions-title">
+                Designed for every role in field service
+              </h2>
+              {/* <p>Each person gets tools that match their responsibilities.</p> */}
             </div>
             {/* CHANGED: added ref={roleRef} */}
             <div className="ff-role-grid" ref={roleRef}>
@@ -923,7 +1004,9 @@ export default function LandingPage() {
           <div className="ff-container">
             <div className="ff-heading" data-reveal>
               <span className="ff-eyebrow">Benefits</span>
-              <h2>One platform. Better service operations.</h2>
+              <h2 className="ff-single-line-title">
+                One platform Better service operations.
+              </h2>
             </div>
             <div className="ff-benefits">
               <div data-reveal>
@@ -961,7 +1044,7 @@ export default function LandingPage() {
                 together.
               </p>
             </div>
-            <a className="ff-button ff-light" href="#login">
+            <a className="ff-button ff-light" href="#login" onClick={handleLogin}>
               Open demo workspace <ArrowRight size={16} />
             </a>
           </div>
@@ -1002,7 +1085,9 @@ export default function LandingPage() {
               <h3>Get in Touch</h3>
               <a href="#contact">Contact Us</a>
               <a href="mailto:hello@fieldflow.example">Email Support</a>
-              <a href="#login">Login</a>
+              <a href="#login" onClick={handleLogin} aria-label="Footer login">
+                Login
+              </a>
               <a href="#contact">Get Started</a>
             </div>
           </div>

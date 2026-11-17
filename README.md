@@ -2,6 +2,27 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+## Appian API
+
+The Super Admin portal uses same-origin `/suite/webapi/...` paths. During
+development, the `proxy` setting in `package.json` forwards those requests to
+Appian and avoids browser CORS errors. Production hosting must provide the
+equivalent reverse proxy for `/suite` and forward the `Appian-API-Key` header.
+
+The organization dashboard API catalog documents `/Products` and `/warehouse`
+as POST-only create endpoints. It does not list GET endpoints for organization
+product or warehouse records, so the dashboard does not request those routes
+with GET; it displays browser-saved records and records added during the session.
+
+## Technician workflow
+
+The technician task screen uses the workbook's task, acceptance, OTP, start,
+repair, and end-task APIs. The workbook does not list service-completion email
+or customer-feedback APIs. The customer confirmation and feedback screen is
+therefore a browser-only demo: it does not send email or save feedback to
+Appian. The general feedback form on About & Contact is also saved only in the
+customer's browser and is not delivered to technicians or the service team.
+
 ## Available Scripts
 
 In the project directory, you can run:

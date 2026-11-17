@@ -16,10 +16,14 @@ export const STATUS_CLASS = {
   Scheduled: "sd-badge--scheduled",
   Completed: "sd-badge--completed",
   "Under Review": "sd-badge--review",
+  NEW: "sd-badge--review",
+  "TICKET CREATED": "sd-badge--progress",
+  "ON WORKING": "sd-badge--progress",
+  CLOSED: "sd-badge--completed",
 };
 
-export const PRIORITY_RANK = { Urgent: 4, High: 3, Normal: 2, Low: 1 };
-export const isHigh = (p) => p === "High" || p === "Urgent";
+export const PRIORITY_RANK = { Critical: 5, Urgent: 4, High: 3, Normal: 2, Low: 1 };
+export const isHigh = (p) => p === "Critical" || p === "High" || p === "Urgent";
 
 export const pad = (n) => String(n).padStart(2, "0");
 

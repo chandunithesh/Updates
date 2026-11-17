@@ -714,6 +714,7 @@ body.ff-landing-active #root {
   font-size: 16px;
   font-weight: 700;
 }
+
 .ff-feature p {
   margin: 0;
   color: var(--muted);
@@ -1190,9 +1191,12 @@ body.ff-landing-active #root {
     flex-direction: column;
   }
 }
-@media (max-width: 480px) {
+@media (max-width: 780px) {
   .ff-container {
     width: calc(100% - 30px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
   .ff-hero h1 {
     font-size: 31px;
@@ -2176,6 +2180,21 @@ body.ff-landing-active #root {
 .ff-page .ff-heading h2 {
   max-width: 18ch;
 }
+.ff-page .ff-heading h2.ff-single-line-title {
+  max-width: none;
+  white-space: nowrap;
+  text-align: center;
+}
+
+@media (max-width: 780px) {
+  .ff-page .ff-heading h2.ff-single-line-title:not(.ff-solutions-title) {
+    white-space: normal;
+  }
+
+  .ff-page .ff-heading h2.ff-solutions-title {
+    font-size: clamp(0.75rem, calc((100vw - 30px) / 20), 2rem);
+  }
+}
 
 /* Hover response for pointer devices: a small spring-like lift, no blur. */
 @media (hover: hover) and (pointer: fine) {
@@ -2926,7 +2945,9 @@ body.ff-landing-active #root {
 }
 .ff-page .ff-heading {
   max-width: 760px;
+  margin-inline: auto;
   margin-bottom: clamp(30px, 4vw, 48px);
+  text-align: center;
 }
 .ff-page .ff-heading h2,
 .ff-page .ff-about h2,
@@ -2935,6 +2956,20 @@ body.ff-landing-active #root {
   line-height: 1.04;
   letter-spacing: -.055em;
   font-weight: 820;
+}
+
+.ff-page .ff-heading h2 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.08em;
+  margin-inline: auto;
+  text-align: center;
+  white-space: normal;
+}
+
+.ff-page .ff-heading h2 span {
+  display: block;
 }
 .ff-page .ff-heading > p,
 .ff-page .ff-about-grid p,
@@ -3208,7 +3243,7 @@ body.ff-landing-active #root {
 }
 @media (max-width: 640px) {
   .ff-page .ff-container {
-    width: min(100% - 32px, 1200px);
+    width: min(100%, calc(100% - 32px));
   }
   .ff-page .ff-section {
     padding-block: 58px;
@@ -5410,6 +5445,7 @@ html { scrollbar-width: thin; scrollbar-color: #2563eb #eff6ff;
 .ff-cf-success > span { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: #fff; color: var(--green); }
 .ff-cf-success strong { display: block; font-size: 13px; }
 .ff-cf-success small { font-size: 12px; }
+.ff-cf-error { padding: 12px 14px; margin-bottom: 6px; border-radius: 10px; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; font-size: 13px; }
 
 @media (max-width: 900px) {
   .ff-cf-grid { grid-template-columns: minmax(0, 1fr); gap: 28px; }

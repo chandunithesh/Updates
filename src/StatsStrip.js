@@ -16,8 +16,14 @@ function Stat({ label, value, icon: Icon, tone }) {
 
 export default function StatsStrip({ requests }) {
   const total = requests.length;
-  const completed = requests.filter((r) => r.status === "Completed").length;
-  const inProgress = requests.filter((r) => r.status === "In Progress").length;
+  const completed = requests.filter((r) =>
+    ["COMPLETED", "CLOSED", "RESOLVED"].includes(
+      String(r.status).trim().toUpperCase(),
+    )
+  ).length;
+  const inProgress = requests.filter((r) =>
+    ["IN PROGRESS", "ON WORKING", "TICKET CREATED"].includes(String(r.status).toUpperCase())
+  ).length;
   const open = total - completed;
 
   return (

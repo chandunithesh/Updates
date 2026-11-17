@@ -1,49 +1,51 @@
+import { Fragment, useState } from "react";
 import {
-  Plus, ClipboardList, Building2, Calendar, ArrowRight, ArrowUpRight, Clock,
-  Flag, Minus, Phone, Mail, Headphones, Info, ShieldCheck,
+  Plus, ClipboardList, Building2, Calendar, Clock3, ArrowRight, ArrowUpRight,
+  Headphones, Info, ShieldCheck,
 } from "lucide-react";
 import StatsStrip from "./StatsStrip.js";
-import { STATUS_CLASS, fmtISO, isHigh } from "./data.js";
+import { STATUS_CLASS, fmtISO } from "./data.js";
+import useCustomerRequests from "./useCustomerRequests.js";
 import "./Home.css";
 
 function ActionCard({ featured, number, icon: Icon, title, text, cta, primary, onClick }) {
   return (
     <article className={`sd-card sd-action ${featured ? "sd-action--featured" : ""}`}>
       <span className="sd-action__num">{number}</span>
-      <span className={`sd-action__icon ${featured ? "is-primary" : ""}`}><Icon size={18} /></span>
+      <span className="sd-action__icon is-primary"><Icon size={18} /></span>
       <h3>{title}</h3>
       <p>{text}</p>
-      {primary ? (
-        <button className="sd-btn sd-btn--primary" onClick={onClick}>
-          <Plus size={14} /> {cta} <ArrowRight size={14} />
-        </button>
-      ) : (
-        <button className="sd-link" onClick={onClick}>{cta} <ArrowRight size={14} /></button>
-      )}
+      <button className="sd-btn sd-btn--primary" onClick={onClick}>
+        {primary && <Plus size={14} />} {cta} <ArrowRight size={14} />
+      </button>
     </article>
   );
 }
 
-export default function Home({ requests, flash, onDismissFlash, onNavigate }) {
+export default function Home({
+  onNavigate,
+  submittedRequests = [],
+  user,
+}) {
+  const [expandedRequest, setExpandedRequest] = useState(null);
+  const { requests, loading, error } = useCustomerRequests(user);
+  const allRequests = [...submittedRequests, ...requests].filter(
+    (request, index, list) => list.findIndex((item) => item.id === request.id) === index
+  );
   const today = new Date()
     .toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
     .replace(",", "");
 
-  const recent = requests.slice(0, 4);
+  const recent = [...allRequests]
+    .sort((a, b) => b.created.localeCompare(a.created))
+    .slice(0, 4);
 
   return (
     <main className="sd-main">
-      {flash && (
-        <div className="sd-flash" role="status">
-          <span>{flash}</span>
-          <button onClick={onDismissFlash}>Dismiss</button>
-        </div>
-      )}
-
       <div className="sd-welcome">
         <div>
-          <div className="sd-eyebrow">YOUR SERVICE, SIMPLIFIED</div>
-          <h1>Welcome back, Apex Industries<span>.</span></h1>
+          <div className="sd-eyebrow">Your Service, Simplified</div>
+          <h1>Welcome back, Feild Flow FSM<span></span></h1>
           <p className="sd-muted">How can we help you today?</p>
         </div>
         <div className="sd-date"><Calendar size={13} /> {today}</div>
@@ -73,7 +75,7 @@ export default function Home({ requests, flash, onDismissFlash, onNavigate }) {
         />
       </div>
 
-      <StatsStrip requests={requests} />
+      <StatsStrip requests={allRequests} />
 
       <div className="sd-lower">
         <section>
@@ -87,55 +89,140 @@ export default function Home({ requests, flash, onDismissFlash, onNavigate }) {
             </button>
           </div>
 
-          <div className="sd-card sd-table">
+          <div className="sd-card sd-table sd-table--home">
             <div className="sd-table__row sd-table__head">
-              <span>Request details</span><span>Requested on</span><span>Status</span><span>Priority</span><span />
+              <span>Request details</span><span>Location</span><span>Category</span><span>Requested on</span><span>Status</span><span />
             </div>
 
+            {error && (
+              <div className="sd-empty" role="alert">
+                <strong>Could not load your requests</strong>
+                <span className="sd-muted">{error}</span>
+              </div>
+            )}
+
+            {!error && !loading && recent.length === 0 && (
+              <div className="sd-empty">
+                <strong>No service requests yet</strong>
+                <span className="sd-muted">Your submitted requests will appear here.</span>
+              </div>
+            )}
+
             {recent.map((r) => {
-              const high = isHigh(r.priority);
+              const locationParts = (r.location || "—")
+                .split(",")
+                .map((part) => part.trim())
+                .filter(Boolean);
+              const locationBreak = Math.floor(locationParts.length / 2);
+
               return (
-                <div className="sd-table__row" key={r.id}>
-                  <span>
-                    <strong className="sd-req-title">{r.title}</strong>
-                    <a href="#" className="sd-req-id" onClick={(e) => e.preventDefault()}>{r.id}</a>
-                  </span>
-                  <span className="sd-muted">{fmtISO(r.created)}</span>
-                  <span><span className={`sd-badge ${STATUS_CLASS[r.status]}`}><i />{r.status}</span></span>
-                  <span className={`sd-priority ${high ? "is-high" : ""}`}>
-                    {high ? <Flag size={12} /> : <Minus size={12} />} {r.priority}
-                  </span>
-                  <span className="sd-open">
-                    <a href="#" aria-label={`Open ${r.title}`} onClick={(e) => e.preventDefault()}>
-                      <ArrowUpRight size={14} />
-                    </a>
-                  </span>
-                </div>
+                <Fragment key={r.id}>
+                  <div className="sd-table__row">
+                    <span>
+                      <strong className="sd-req-title">{r.title}</strong>
+                      <button
+                        type="button"
+                        className="sd-req-id sd-req-id--button"
+                        aria-label={`${expandedRequest === r.id ? "Hide" : "Show"} details for request ${r.id}`}
+                        aria-expanded={expandedRequest === r.id}
+                        aria-controls={
+                          expandedRequest === r.id
+                            ? `home-request-details-${r.id}`
+                            : undefined
+                        }
+                        onClick={() =>
+                          setExpandedRequest(
+                            expandedRequest === r.id ? null : r.id,
+                          )
+                        }
+                      >
+                        {r.id}
+                      </button>
+                    </span>
+                    <span className="sd-home-location">
+                      {locationParts.length > 1 ? (
+                        <>
+                          {locationParts.slice(0, locationBreak).join(", ")}
+                          <br />
+                          {locationParts.slice(locationBreak).join(", ")}
+                        </>
+                      ) : (
+                        locationParts[0]
+                      )}
+                    </span>
+                    <span>{r.category || "—"}</span>
+                    <span className="sd-muted">{fmtISO(r.created)}</span>
+                    <span>
+                      <span className={`sd-badge ${STATUS_CLASS[r.status] || "sd-badge--review"}`}>
+                        <i />
+                        {r.status}
+                      </span>
+                    </span>
+                    <span className="sd-open">
+                      <button
+                        type="button"
+                        aria-label={`${expandedRequest === r.id ? "Hide" : "Show"} details for ${r.title}`}
+                        aria-expanded={expandedRequest === r.id}
+                        aria-controls={
+                          expandedRequest === r.id
+                            ? `home-request-details-${r.id}`
+                            : undefined
+                        }
+                        onClick={() =>
+                          setExpandedRequest(
+                            expandedRequest === r.id ? null : r.id,
+                          )
+                        }
+                      >
+                        <ArrowUpRight size={14} />
+                      </button>
+                    </span>
+                  </div>
+                  {expandedRequest === r.id && (
+                    <div
+                      className="sd-request-details sd-home-request-details"
+                      id={`home-request-details-${r.id}`}
+                    >
+                      <div>
+                        <strong>Issue description</strong>
+                        <p>{r.description || "No description provided."}</p>
+                      </div>
+                    </div>
+                  )}
+                </Fragment>
               );
             })}
 
-            <div className="sd-table__foot">
-              <span>Showing {recent.length} requests</span>
-              <span className="sd-chip">Sample records</span>
-            </div>
+            {/* <div className="sd-table__foot">
+              <span>{loading ? "Loading your requests…" : `Showing ${recent.length} requests`}</span>
+              <span className="sd-chip">Live requests</span>
+            </div> */}
           </div>
         </section>
 
-        <aside className="sd-card sd-help">
-          <div className="sd-help__top">
-            <span className="sd-help__photo" aria-hidden="true" />
-            <span className="sd-help__badge"><Headphones size={16} /></span>
+        <aside className="sd-sidebar">
+          <div className="sd-card sd-sla">
+            <div className="sd-sla__heading">
+              <span className="sd-sla__icon"><Clock3 size={16} /></span>
+              <div>
+                <span className="sd-sla__label">Service response time</span>
+                <strong>SLA: 3 days</strong>
+              </div>
+            </div>
+            <p>A technician may arrive within 1–3 days.</p>
           </div>
-          <h3>A little help, whenever you need it.</h3>
-          <p>Our support team is here to help with your service enquiries.</p>
-          <ul>
-            <li><Phone size={13} /> Phone not configured</li>
-            <li><Mail size={13} /> Email not configured</li>
-          </ul>
-          <button className="sd-btn sd-btn--ghost" onClick={() => onNavigate("about")}>
-            Contact Support <ArrowRight size={14} />
-          </button>
-          <div className="sd-help__hours"><Clock size={12} /> Business hours not configured.</div>
+
+          <div className="sd-card sd-help">
+            <div className="sd-help__top">
+              <span className="sd-help__photo" aria-hidden="true" />
+              <span className="sd-help__badge"><Headphones size={16} /></span>
+            </div>
+            <h3>Customer support, whenever you need it.</h3>
+            <p>Find customer support and contact options in About &amp; Contact.</p>
+            <button className="sd-btn sd-btn--ghost" onClick={() => onNavigate("about")}>
+              About &amp; Contact <ArrowRight size={14} />
+            </button>
+          </div>
         </aside>
       </div>
 
@@ -149,7 +236,7 @@ export default function Home({ requests, flash, onDismissFlash, onNavigate }) {
 
       <footer className="sd-footer">
         <ShieldCheck size={13} /> Your service requests. All in one place.
-        <span className="sd-chip">Demo portal</span>
+        {/* <span className="sd-chip">Demo portal</span> */}
       </footer>
     </main>
   );
